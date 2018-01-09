@@ -68,11 +68,11 @@ def getFreeEpisodeByName(name):
     return candidates[0] if len(candidates)>0 else None
 
 def getRadioEpisodeByNumber(episodeNumber):
-    candidates=list(filter(lambda x: x['Number']==episodeNumber, getRadioEpisodes()))
+    candidates=list(filter(lambda x: x['Number']==str(episodeNumber), getRadioEpisodes()))
     return candidates[0] if len(candidates) > 0 else None
 
 def getFreeEpisodeByNumber(episodeNumber):
-    candidates=list(filter(lambda x: x['Number']==episodeNumber, getFreeEpisodes()))
+    candidates=list(filter(lambda x: x['Number']==str(episodeNumber), getFreeEpisodes()))
     return candidates[0] if len(candidates) > 0 else None
 
 def fuzzyMatch(string1, string2):
@@ -93,3 +93,4 @@ def fuzzyMatch(string1, string2):
 #print(list(map(lambda x:x['URL'],getRadioEpisodes()['Episodes'])))
 #print(getFreeEpisodes())
 #print(getFreeEpisodeByName("Youre Not going to believe this!!!"))
+#print(getRadioEpisodeByNumber(522))

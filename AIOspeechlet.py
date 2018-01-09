@@ -116,21 +116,38 @@ def handlePlayByNumberIntent(intent, session):
 
     if 'EpisodeNumber' in intent['slots']:
         episodeNumber = intent['slots']['EpisodeNumber']['value']
+        print(episodeNumber)
+        print(type(episodeNumber))
         session_attributes = session['attributes']
-        if session_attributes['Radio']==True:
-            session_attributes.update({'lastPlayed':AIO.getRadioEpisodeByNumber(episodeNumber)})
+        try:
+            if session_attributes['Radio'] and not session_attributes['Free']:
+                print("Radio")
+                session_attributes.update({'lastPlayed':AIO.getRadioEpisodeByNumber(episodeNumber)})
+                session_attributes['Radio']=False
+                e=AIO.getRadioEpisodeByNumber(episodeNumber)
+            elif session_attributes['Free'] and not session_attributes['Radio']:
+                print("Free")
+                e = AIO.getFreeEpisodeByNumber(episodeNumber)
+                session_attributes['Free'] = False
+            else:
+                print("Searching Radio")
+                e = AIO.getRadioEpisodeByNumber(episodeNumber)
+                if not e:
+                    print("Searching Free")
+                    e = AIO.getFreeEpisodeByNumber(episodeNumber)
+            return build_response(session_attributes, start_play_url_response(e['url']))
+        except TypeError:
+            speech_output = "I couldn't find episode {0} in {1}.".format(str(episodeNumber),"radio episodes" if session_attributes['Radio'] else "free episodes")
+            reprompt_text = "Please try again."
             session_attributes['Radio']=False
-            e=AIO.getRadioEpisodeByNumber(episodeNumber)
-        else:
-            session_attributes.update({'lastPlayed':AIO.getFreeEpisodeByNumber(episodeNumber)})
             session_attributes['Free']=False
-            e=AIO.getFreeEpisodeByNumber(episodeNumber)
-        return build_response(session_attributes,start_play_url_response(e['url']))
+
     else:
         speech_output = "playByName was called, but no episode name was found. " \
                         "Please try again."
         reprompt_text = None
-        return build_response(session_attributes, build_speechlet_response(card_title, speech_output, reprompt_text, should_end_session))
+
+    return build_response(session_attributes, build_speechlet_response(card_title, speech_output, reprompt_text, should_end_session))
 
 
 def handlePlayByNameIntent(intent, session):

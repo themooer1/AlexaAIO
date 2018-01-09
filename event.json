@@ -2,7 +2,10 @@
   "session": {
     "new": false,
     "sessionId": "amzn1.echo-api.session.[unique-value-here]",
-    "attributes": {"Radio":false,"Free":false},
+    "attributes": {
+      "Radio": true,
+      "Free": true
+    },
     "user": {
       "userId": "amzn1.ask.account.[unique-value-here]"
     },
@@ -21,9 +24,13 @@
         "EpisodeName": {
           "name": "EpisodeName",
           "value": "You're not going to believe this!"
+        },
+        "EpisodeNumber":{
+            "name": "EpisodeNumber",
+            "value": "608"
         }
       },
-      "name": "PlayByNameIntent"
+      "name": "PlayByNumberIntent"
     }
   },
   "context": {
