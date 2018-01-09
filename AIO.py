@@ -40,7 +40,6 @@ def makeRadioURL(date):
 def getRadioEpisodes()->list:
     global radioURL
     e = requests.get(radioURL,timeout=1).json()
-    print(e)
     for i in e['Episodes']:
         e['Episodes'][e['Episodes'].index(i)]['url']=makeRadioURL(transformDate(e['Episodes'][e['Episodes'].index(i)]['Date']))
     e['Episodes']=sorted(e['Episodes'],key=lambda x:dateValue(x['Date']),reverse=True)
@@ -49,7 +48,6 @@ def getRadioEpisodes()->list:
 def getFreeEpisodes()->list:
     global freeURL
     e=requests.get(freeURL,timeout=2).json()['Episodes']
-    print(e)
     for episode in e:
         e[e.index(episode)]['Summary']=stringChoice(episode['Summary'])
     return e
@@ -93,5 +91,5 @@ def fuzzyMatch(string1, string2):
 
 #print(stringChoice("blah blah blah [[me|you]] candle brick sandwich. Summary information [[this|that]][[who|what]]in the world."))
 #print(list(map(lambda x:x['URL'],getRadioEpisodes()['Episodes'])))
-print(getFreeEpisodes())
-print(getFreeEpisodeByName("Youre Not going to believe this!!!"))
+#print(getFreeEpisodes())
+#print(getFreeEpisodeByName("Youre Not going to believe this!!!"))

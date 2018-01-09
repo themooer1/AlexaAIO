@@ -34,8 +34,8 @@ def build_speechlet_response(title, output, reprompt_text, should_end_session):
         'shouldEndSession': should_end_session
     }
 
-def build_audio_response(audioFunction: str, token: str, url:str, offset):
-    """Builds an audio response with the given audiofunction (Play, Pause, etc.), Unique token, url and offset"""
+def build_audio_response(audioFunction: str, token: str, url:str, offset=0):
+    """Builds an audio response with the given audiofunction (Play, Pause, etc.), Unique token, url and offset=0"""
     if audioFunction not in {"Play","Stop","ClearQueue"}: return build_speechlet_response("Unsupported audio directive "+audioFunction, "Unsupported audio directive "+audioFunction+" was prevented from executing.", None, True)
     return {
         'outputSpeech': {},
@@ -43,12 +43,12 @@ def build_audio_response(audioFunction: str, token: str, url:str, offset):
         'reprompt': {},
         'directives': [
             {'type': "AudioPlayer."+audioFunction,
-             'playBehavior': "string",
+             'playBehavior': "REPLACE_ALL",
              'audioItem': {
                  'stream': {
-                     'token': "string",
-                     'url': "string",
-                     'offsetInMilliseconds': 0
+                     'token': token,
+                     'url': url,
+                     'offsetInMilliseconds': offset
                  }
                 }
              }
@@ -56,9 +56,6 @@ def build_audio_response(audioFunction: str, token: str, url:str, offset):
         'shouldEndSession': True
     }
 
-def build_audio_response(audioFunction: str, token: str, url:str):
-    """Builds an audio response with the given audiofunction (Play, Pause, etc.), Unique token, url and offset=0"""
-    return build_audio_response(audioFunction,token,url,0)
 
 def start_play_url_response(url:str):
     tokenGen = sha256()
@@ -146,7 +143,8 @@ def handlePlayByNameIntent(intent, session):
 
     if 'EpisodeName' in intent['slots']:
         episodeName = intent['slots']['EpisodeName']['value']
-        session_attributes = session['attributes']+{'lastPlayed':episodeName}
+        session_attributes = session['attributes']
+        session_attributes.update({'lastPlayed':episodeName})
         if session_attributes['Radio']==True:
             e=AIO.getRadioEpisodeByName(episodeName)
             session_attributes['Radio']=False
