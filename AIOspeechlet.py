@@ -137,8 +137,9 @@ def handlePlayByNumberIntent(intent, session):
     session_attributes=session['attributes']
     should_end_session = True
 
+
     if 'EpisodeNumber' in intent['slots']:
-        episodeNumber = intent['slots']['EpisodeNumber']['value']
+        episodeNumber = intent['slots']['EpisodeNumber']['value'].zfill(3)
         print(episodeNumber)
         print(type(episodeNumber))
         session_attributes = session['attributes']

@@ -4,7 +4,7 @@
     "sessionId": "amzn1.echo-api.session.[unique-value-here]",
     "attributes": {
       "Radio": true,
-      "Free": true
+      "Free": false
     },
     "user": {
       "userId": "amzn1.ask.account.[unique-value-here]"
@@ -27,7 +27,7 @@
         },
         "EpisodeNumber":{
             "name": "EpisodeNumber",
-            "value": "608"
+            "value": "67"
         }
       },
       "name": "PlayByNumberIntent"
