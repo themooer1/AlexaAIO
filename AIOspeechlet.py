@@ -85,13 +85,16 @@ def get_welcome_response():
     add those here
     """
 
+    latest=AIO.getRadioEpisodes()[0]
+
     session_attributes =default_session
     card_title = "Adventures in Odyssey"
     speech_output = "Welcome to Adventues in Odyssey. " \
                     "You can ask me to play an episode currently on the radio or a free episode from Whit's end dot org." \
                     "If you don't know the name of the episode you can ask - What's on the radio?" \
                     "Or just say - Play the latest episode." \
-                    "If you just want to hear anything say - play anything, play whatever, or play a random episode."
+                    "If you just want to hear anything say - play anything, play whatever, or play a random episode." \
+                    "The latest episode is episode {0}, {1}".format(latest['Number'],latest['Name'])
     # If the user either does not reply to the welcome message or says something
     # that is not understood, they will be prompted again with this text.
     reprompt_text = "You can ask to play an episode by name, list available episodes, or play a random episode. "
@@ -147,9 +150,13 @@ def handlePlayByNameIntent(intent, session):
         if session_attributes['Radio']==True:
             e=AIO.getRadioEpisodeByName(episodeName)
             session_attributes['Radio']=False
-        else:
+        elif session_attributes['Free']==True:
             e=AIO.getFreeEpisodeByName(episodeName)
             session_attributes['Free']=False
+        else:
+            e=AIO.getRadioEpisodeByName(episodeName)
+            if not e:
+                e=AIO.getFreeEpisodeByName(episodeName)
 
         return build_response(session_attributes,start_play_url_response(e['url']))
 
@@ -205,10 +212,14 @@ def on_intent(intent_request, session):
     intent_name = intent_request['intent']['name']
 
     # Dispatch to your skill's intent handlers
-    if intent_name == "MyColorIsIntent":
-        return set_color_in_session(intent, session)
-    elif intent_name == "WhatsMyColorIntent":
-        return get_color_from_session(intent, session)
+    if intent_name == "PlayByNumberIntent":
+        return handlePlayByNumberIntent(intent, session)
+    elif intent_name == "PlayByNameIntent":
+        return handlePlayByNameIntent(intent, session)
+    elif intent_name == "ListRadioIntent":
+        return handleListRadioIntent(intent, session)
+    elif intent_name == "ListFreeIntent":
+        return handleListFreeIntent(intent, session)
     elif intent_name == "AMAZON.HelpIntent":
         return get_welcome_response()
     elif intent_name == "AMAZON.CancelIntent" or intent_name == "AMAZON.StopIntent":
@@ -241,7 +252,7 @@ def lambda_handler(event, context):
     prevent someone else from configuring a skill that sends requests to this
     function.
     """
-    # if (event['session']['application']['applicationId'] !=
+    #if (event['session']['application']['applicationId'] !=
     #         "amzn1.echo-sdk-ams.app.[unique-value-here]"):
     #     raise ValueError("Invalid Application ID")
 
