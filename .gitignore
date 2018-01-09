@@ -3,3 +3,6 @@
 *.iml
 *.xml
 config.yaml
+config.yaml
+*.yaml
+*.xml

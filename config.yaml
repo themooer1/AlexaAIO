@@ -13,8 +13,8 @@ role: lambda_basic_execution
 
 # if access key and secret are left blank, boto will use the credentials
 # defined in the [default] section of ~/.aws/credentials.
-aws_access_key_id: AKIAIYBUF2IZUPWFH7DA
-aws_secret_access_key: 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
+aws_access_key_id: AKIAJDES6OB53D7JPH4Q
+aws_secret_access_key: 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
 
 # dist_directory: dist
 # timeout: 15
