@@ -34,7 +34,7 @@ def build_speechlet_response(title, output, reprompt_text, should_end_session):
         'shouldEndSession': should_end_session
     }
 
-def build_audio_response(audioFunction: str, token: str, url:str, offset=0):
+def build_audio_response(audioFunction: str, token: str, url:str, offset=0, playBehavior="REPLACE_ALL"):
     """Builds an audio response with the given audiofunction (Play, Pause, etc.), Unique token, url and offset=0"""
     if audioFunction not in {"Play","Stop","ClearQueue"}: return build_speechlet_response("Unsupported audio directive "+audioFunction, "Unsupported audio directive "+audioFunction+" was prevented from executing.", None, True)
     return {
@@ -43,7 +43,7 @@ def build_audio_response(audioFunction: str, token: str, url:str, offset=0):
         'reprompt': {},
         'directives': [
             {'type': "AudioPlayer."+audioFunction,
-             'playBehavior': "REPLACE_ALL",
+             'playBehavior': playBehavior,
              'audioItem': {
                  'stream': {
                      'token': token,
