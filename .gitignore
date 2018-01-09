@@ -4,3 +4,4 @@ config.yaml
 .idea
 dist/*
 dist
+event.json

@@ -10,6 +10,16 @@ http://amzn.to/1LGWsLG
 """
 
 # --------------- Miscellaneous Helpers ----------------------
+default_session={"Radio":False,"Free":False}
+
+def defaultSessionIfNotSet(session_attributes:dict):
+    global default_session
+    for key, value in default_session.items():
+        if key not in session_attributes:
+            print(key+" not found!  Setting to "+str(value))
+            session_attributes.update({key:value})
+    print(session_attributes)
+    return session_attributes
 
 def url2token(url:str):
     tokenGen=sha256()
@@ -17,8 +27,6 @@ def url2token(url:str):
     return tokenGen.hexdigest()
 
 # --------------- Helpers that build all of the responses ----------------------
-
-default_session={"Radio":False,"Free":False}
 
 def build_speechlet_response(title, output, reprompt_text, should_end_session):
     return {
@@ -245,6 +253,8 @@ def on_launch(launch_request, session):
 
 def on_intent(intent_request, session):
     """ Called when the user specifies an intent for this skill """
+
+    session['attributes'] = defaultSessionIfNotSet(session['attributes'])
 
     print("on_intent requestId=" + intent_request['requestId'] +
           ", sessionId=" + session['sessionId'])
