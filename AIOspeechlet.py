@@ -212,13 +212,15 @@ def handleListRadioIntent():
     session_attributes['Radio']=True
     speech_output = "I found the currently airing episodes.  Interrupt me when you hear one you want to play, and say the name of the episode.  " + ".  ".join(["Episode {0}.  ".format(ep['Number'])+ep['Name'] for ep in AIO.getRadioEpisodes()])
     reprompt_text = "Which episode do you want to play?  You can ask for a description, say the name of the episode, or say the number. "
+    return build_response(build_speechlet_response("Currently Airing",speech_output,reprompt_text,False))
 
 def handleListFreeIntent():
     global default_session
     session_attributes = default_session
     session_attributes['Free']=True
     speech_output = "I found some free episodes.  Interrupt me when you hear one you want to play, and say the name of the episode.    " + ".  ".join(["Episode {0}.  ".format(ep['Number'])+ep['Name'] for ep in AIO.getFreeEpisodes()])
-
+    reprompt_text = "Which episode do you want to play?  You can ask for a description, say the name of the episode, or say the number. "
+    return build_response(build_speechlet_response("Free Episodes", speech_output, reprompt_text, False))
 
 
 # --------------- Events ------------------
@@ -297,9 +299,9 @@ def lambda_handler(event, context):
     prevent someone else from configuring a skill that sends requests to this
     function.
     """
-    #if (event['session']['application']['applicationId'] !=
-    #         "amzn1.echo-sdk-ams.app.[unique-value-here]"):
-    #     raise ValueError("Invalid Application ID")
+    if (event['session']['application']['applicationId'] !=
+             "amzn1.ask.skill.84156db1-d05b-4c44-8e27-c02e34b6157f"):
+         raise ValueError("Invalid Application ID")
 
     if event['session']['new']:
         on_session_started({'requestId': event['request']['requestId']},
