@@ -9,6 +9,12 @@ For additional samples, visit the Alexa Skills Kit Getting Started guide at
 http://amzn.to/1LGWsLG
 """
 
+# --------------- Miscellaneous Helpers ----------------------
+
+def url2token(url:str):
+    tokenGen=sha256()
+    tokenGen.update(url.encode())
+    return tokenGen.hexdigest()
 
 # --------------- Helpers that build all of the responses ----------------------
 
@@ -56,12 +62,20 @@ def build_audio_response(audioFunction: str, token: str, url:str, offset=0, play
         'shouldEndSession': True
     }
 
+def build_audio_control_response(audioFunction:str):
+    return {
+        'outputSpeech': {},
+        'card': {},
+        'reprompt': {},
+        'directives': [
+            {'type': "AudioPlayer." + audioFunction}
+        ],
+        'shouldEndSession': True
+    }
+
 
 def start_play_url_response(url:str):
-    tokenGen = sha256()
-    tokenGen.update(url.encode())
-    token=tokenGen.hexdigest()
-
+    token=url2token(url)
     return build_audio_response("Play", token, url)
 
 
@@ -107,6 +121,15 @@ def handle_session_end_request():
     should_end_session = True
     return build_response({}, build_speechlet_response(
         card_title, speech_output, None, should_end_session))
+
+def handlePauseIntent(intent,session):
+    return build_response(session['attributes'],build_audio_control_response("Pause"))
+
+def handleStopIntent(intent,session):
+    return build_response(session['attributes'],build_audio_control_response("Stop"))
+
+def handleResumeIntent(intent,session):
+    return build_response(session['attributes'],build_speechlet_response("ResumeNotImplemented","Unfortunately, the resume function is not yet implemented.","Just ask to play an episode by name or number.",False))
 
 def handlePlayByNumberIntent(intent, session):
 
@@ -237,6 +260,12 @@ def on_intent(intent_request, session):
         return handleListFreeIntent(intent, session)
     elif intent_name == "AMAZON.HelpIntent":
         return get_welcome_response()
+    elif intent_name == "AMAZON.PauseIntent":
+        return handlePauseIntent(intent,session)
+    elif intent_name == "AMAZON.ResumeIntent":
+        return handleResumeIntent(intent,session)
+    elif intent_name == "AMAZON.StopIntent":
+        return handleStopIntent(intent,session)
     elif intent_name == "AMAZON.CancelIntent" or intent_name == "AMAZON.StopIntent":
         return handle_session_end_request()
     else:
