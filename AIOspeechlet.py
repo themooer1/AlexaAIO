@@ -16,9 +16,9 @@ def defaultSessionIfNotSet(session_attributes:dict):
     global default_session
     for key, value in default_session.items():
         if key not in session_attributes:
-            print(key+" not found!  Setting to "+str(value))
+            #print(key+" not found!  Setting to "+str(value))
             session_attributes.update({key:value})
-    print(session_attributes)
+    #print(session_attributes)
     return session_attributes
 
 def url2token(url:str):
@@ -28,8 +28,8 @@ def url2token(url:str):
 
 # --------------- Helpers that build all of the responses ----------------------
 
-def build_speechlet_response(title, output, reprompt_text, should_end_session):
-    return {
+def build_speechlet_response(title, output, reprompt_text, should_end_session,directive=None):
+    resp={
         'outputSpeech': {
             'type': 'PlainText',
             'text': output
@@ -45,18 +45,20 @@ def build_speechlet_response(title, output, reprompt_text, should_end_session):
                 'text': reprompt_text
             }
         },
+        'directives': [],
         'shouldEndSession': should_end_session
     }
+    if directive:
+        resp['directives'].append(directive)
+    else:
+        resp.pop('directives',None)
+    return resp
 
-def build_audio_response(audioFunction: str, token: str, url:str, offset=0, playBehavior="REPLACE_ALL"):
+
+def build_audio_directive(audioFunction: str, token: str, url:str, offset=0, playBehavior="REPLACE_ALL"):
     """Builds an audio response with the given audiofunction (Play, Pause, etc.), Unique token, url and offset=0"""
     if audioFunction not in {"Play","Stop","ClearQueue"}: return build_speechlet_response("Unsupported audio directive "+audioFunction, "Unsupported audio directive "+audioFunction+" was prevented from executing.", None, True)
-    return {
-        'outputSpeech': {},
-        'card': {},
-        'reprompt': {},
-        'directives': [
-            {'type': "AudioPlayer."+audioFunction,
+    return {'type': "AudioPlayer."+audioFunction,
              'playBehavior': playBehavior,
              'audioItem': {
                  'stream': {
@@ -66,11 +68,8 @@ def build_audio_response(audioFunction: str, token: str, url:str, offset=0, play
                  }
                 }
              }
-        ],
-        'shouldEndSession': True
-    }
 
-def build_audio_control_response(audioFunction:str):
+def build_audio_control_directive(audioFunction:str):
     return {
         'outputSpeech': {},
         'card': {},
@@ -82,9 +81,9 @@ def build_audio_control_response(audioFunction:str):
     }
 
 
-def start_play_url_response(url:str):
+def start_play_url_response(url:str,title="Playing", output="Now Playing", reprompt_text=None, should_end_session=True):
     token=url2token(url)
-    return build_audio_response("Play", token, url)
+    return build_speechlet_response(title,output,reprompt_text,should_end_session,directive=build_audio_directive("Play", token, url))
 
 
 
@@ -109,7 +108,7 @@ def get_welcome_response():
     session_attributes =default_session
     card_title = "Adventures in Odyssey"
     speech_output = "Welcome to Adventues in Odyssey. " \
-                    "You can ask me to play an episode currently on the radio or a free episode from Whit's end dot org." \
+                    "You can ask me to play an episode currently on the radio or a free episode from whitsend.org." \
                     "If you don't know the name of the episode you can ask - What's on the radio?" \
                     "Or just say - Play the latest episode." \
                     "If you just want to hear anything say - play anything, play whatever, or play a random episode." \
@@ -131,25 +130,35 @@ def handle_session_end_request():
         card_title, speech_output, None, should_end_session))
 
 def handlePauseIntent(intent,session):
-    return build_response(session['attributes'],build_audio_control_response("Pause"))
+    return build_response(session['attributes'], build_speechlet_response("Pause", "Paused", None, True,directive=build_audio_control_directive("Pause")))
 
 def handleStopIntent(intent,session):
-    return build_response(session['attributes'],build_audio_control_response("Stop"))
+    return build_response(session['attributes'],build_speechlet_response("Stop",None,None,True,directive=build_audio_control_directive("Stop")))
 
 def handleResumeIntent(intent,session):
     return build_response(session['attributes'],build_speechlet_response("ResumeNotImplemented","Unfortunately, the resume function is not yet implemented.","Just ask to play an episode by name or number.",False))
+
+def handlePlayLatestIntent(intent, session):
+    card_title="playLatestFailed"
+    session_attributes=session['attributes']
+    session_attributes=defaultSessionIfNotSet(session_attributes)
+    should_end_session=True
+    e=AIO.getRadioEpisodes()[0]
+    session_attributes.update({'lastPlayed':e['Name']})
+    return build_response(session_attributes,start_play_url_response(e['url'],"Playing: "+e['Name'],"Now playing "+e['Name']))
 
 def handlePlayByNumberIntent(intent, session):
 
     card_title="playByNumberFailed"
     session_attributes=session['attributes']
+    session_attributes = defaultSessionIfNotSet(session_attributes)
     should_end_session = True
 
 
     if 'EpisodeNumber' in intent['slots']:
         episodeNumber = intent['slots']['EpisodeNumber']['value'].zfill(3)
-        print(episodeNumber)
-        print(type(episodeNumber))
+        #print(episodeNumber)
+        #print(type(episodeNumber))
         session_attributes = session['attributes']
         try:
             if session_attributes['Radio'] and not session_attributes['Free']:
@@ -167,9 +176,55 @@ def handlePlayByNumberIntent(intent, session):
                 if not e:
                     print("Searching Free")
                     e = AIO.getFreeEpisodeByNumber(episodeNumber)
-            return build_response(session_attributes, start_play_url_response(e['url']))
-        except TypeError:
+            return build_response(session_attributes, start_play_url_response(e['url'],"Playing: "+e['Name'],"Now playing "+e['Name']))
+        except TypeError as e:
+            raise(e)
             speech_output = "I couldn't find episode {0} in {1}.".format(str(episodeNumber),"radio episodes" if session_attributes['Radio'] else "free episodes")
+            reprompt_text = "Please try again."
+            session_attributes['Radio']=False
+            session_attributes['Free']=False
+
+    else:
+        speech_output = "playByNumber was called, but no episode name was found. " \
+                        "Please try again."
+        reprompt_text = None
+
+    return build_response(session_attributes, build_speechlet_response(card_title, speech_output, reprompt_text, should_end_session))
+
+
+def handlePlayByNameIntent(intent, session):
+
+    card_title="playByNameFailed"
+    session_attributes=session['attributes']
+    session_attributes=defaultSessionIfNotSet(session_attributes)
+    should_end_session = True
+
+
+    if 'EpisodeName' in intent['slots']:
+        episodeName = intent['slots']['EpisodeName']['value'].zfill(3)
+        #print(episodeName)
+        #print(type(episodeName))
+        session_attributes = session['attributes']
+        try:
+            if session_attributes['Radio'] and not session_attributes['Free']:
+                print("Radio")
+                session_attributes.update({'lastPlayed':AIO.getRadioEpisodeByName(episodeName)})
+                session_attributes['Radio']=False
+                e=AIO.getRadioEpisodeByName(episodeName)
+            elif session_attributes['Free'] and not session_attributes['Radio']:
+                print("Free")
+                e = AIO.getFreeEpisodeByName(episodeName)
+                session_attributes['Free'] = False
+            else:
+                print("Searching Radio")
+                e = AIO.getRadioEpisodeByName(episodeName)
+                if not e:
+                    print("Searching Free")
+                    e = AIO.getFreeEpisodeByName(episodeName)
+            return build_response(session_attributes, start_play_url_response(e['url'],"Playing: "+e['Name'],"Now playing "+e['Name']))
+        except TypeError as e:
+            raise(e)
+            speech_output = "I couldn't find episode {0} in {1}.".format(str(episodeName),"radio episodes" if session_attributes['Radio'] else "free episodes")
             reprompt_text = "Please try again."
             session_attributes['Radio']=False
             session_attributes['Free']=False
@@ -181,54 +236,21 @@ def handlePlayByNumberIntent(intent, session):
 
     return build_response(session_attributes, build_speechlet_response(card_title, speech_output, reprompt_text, should_end_session))
 
-
-def handlePlayByNameIntent(intent, session):
+def handleListRadioIntent(intent, session):
     global default_session
-    """Plays an Episode by it's name."""
-
-    card_title = "playByNameFailed"
-    session_attributes = session['attributes']
-    should_end_session = True
-
-    if 'EpisodeName' in intent['slots']:
-        episodeName = intent['slots']['EpisodeName']['value']
-        session_attributes = session['attributes']
-        session_attributes.update({'lastPlayed':episodeName})
-        if session_attributes['Radio']==True:
-            e=AIO.getRadioEpisodeByName(episodeName)
-            session_attributes['Radio']=False
-        elif session_attributes['Free']==True:
-            e=AIO.getFreeEpisodeByName(episodeName)
-            session_attributes['Free']=False
-        else:
-            e=AIO.getRadioEpisodeByName(episodeName)
-            if not e:
-                e=AIO.getFreeEpisodeByName(episodeName)
-
-        return build_response(session_attributes,start_play_url_response(e['url']))
-
-    else:
-        speech_output = "playByName was called, but no episode name was found. " \
-                        "Please try again."
-        reprompt_text = None
-        return build_response(session_attributes, build_speechlet_response(
-        card_title, speech_output, reprompt_text, should_end_session))
-
-def handleListRadioIntent():
-    global default_session
-    session_attributes=default_session
+    session_attributes=session['attributes']
     session_attributes['Radio']=True
     speech_output = "I found the currently airing episodes.  Interrupt me when you hear one you want to play, and say the name of the episode.  " + ".  ".join(["Episode {0}.  ".format(ep['Number'])+ep['Name'] for ep in AIO.getRadioEpisodes()])
     reprompt_text = "Which episode do you want to play?  You can ask for a description, say the name of the episode, or say the number. "
-    return build_response(build_speechlet_response("Currently Airing",speech_output,reprompt_text,False))
+    return build_response(session_attributes,build_speechlet_response("Currently Airing",speech_output,reprompt_text,False))
 
-def handleListFreeIntent():
+def handleListFreeIntent(intent, session):
     global default_session
-    session_attributes = default_session
+    session_attributes = session['attributes']
     session_attributes['Free']=True
     speech_output = "I found some free episodes.  Interrupt me when you hear one you want to play, and say the name of the episode.    " + ".  ".join(["Episode {0}.  ".format(ep['Number'])+ep['Name'] for ep in AIO.getFreeEpisodes()])
     reprompt_text = "Which episode do you want to play?  You can ask for a description, say the name of the episode, or say the number. "
-    return build_response(build_speechlet_response("Free Episodes", speech_output, reprompt_text, False))
+    return build_response(session_attributes,build_speechlet_response("Free Episodes", speech_output, reprompt_text, False))
 
 
 # --------------- Events ------------------
@@ -267,6 +289,8 @@ def on_intent(intent_request, session):
         return handlePlayByNumberIntent(intent, session)
     elif intent_name == "PlayByNameIntent":
         return handlePlayByNameIntent(intent, session)
+    elif intent_name == "PlayLatestIntent":
+        return handlePlayLatestIntent(intent, session)
     elif intent_name == "ListRadioIntent":
         return handleListRadioIntent(intent, session)
     elif intent_name == "ListFreeIntent":
@@ -309,9 +333,9 @@ def lambda_handler(event, context):
     prevent someone else from configuring a skill that sends requests to this
     function.
     """
-    if (event['session']['application']['applicationId'] !=
-             "amzn1.ask.skill.84156db1-d05b-4c44-8e27-c02e34b6157f"):
-         raise ValueError("Invalid Application ID")
+    #if (event['session']['application']['applicationId'] !=
+    #         "amzn1.ask.skill.84156db1-d05b-4c44-8e27-c02e34b6157f"):
+    #     raise ValueError("Invalid Application ID")
 
     if event['session']['new']:
         on_session_started({'requestId': event['request']['requestId']},
@@ -323,3 +347,5 @@ def lambda_handler(event, context):
         return on_intent(event['request'], event['session'])
     elif event['request']['type'] == "SessionEndedRequest":
         return on_session_ended(event['request'], event['session'])
+
+print("\n\n\n\n")

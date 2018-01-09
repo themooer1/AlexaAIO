@@ -29,7 +29,7 @@ def dateValue(date):
     return int(date)
 
 def makeRadioURL(date):
-    urlbase="http://media.focusonthefamily.com/fotf/mp3/aio/"
+    urlbase="https://fotfproxy.tk/fotf/mp3/aio/"
     urltip="aio_{0}.mp3".format(date)
     if requests.get(urlbase+urltip,timeout=2,stream=True).status_code==200:
         return urlbase+urltip
@@ -39,7 +39,7 @@ def makeRadioURL(date):
 
 def getRadioEpisodes()->list:
     global radioURL
-    e = requests.get(radioURL,timeout=1).json()
+    e = requests.get(radioURL,timeout=2).json()
     for i in e['Episodes']:
         e['Episodes'][e['Episodes'].index(i)]['url']=makeRadioURL(transformDate(e['Episodes'][e['Episodes'].index(i)]['Date']))
     e['Episodes']=sorted(e['Episodes'],key=lambda x:dateValue(x['Date']),reverse=True)

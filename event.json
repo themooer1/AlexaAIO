@@ -1,54 +1,49 @@
 {
   "session": {
-    "new": false,
-    "sessionId": "amzn1.echo-api.session.[unique-value-here]",
-    "attributes": {
-      "Radio": true,
-      "Free": false
-    },
-    "user": {
-      "userId": "amzn1.ask.account.[unique-value-here]"
-    },
+    "new": true,
+    "sessionId": "SessionId.0a11aff4-8de7-4f49-a8a2-d56a1876a13c",
     "application": {
-      "applicationId": "amzn1.ask.skill.[unique-value-here]"
+      "applicationId": "amzn1.ask.skill.84156db1-d05b-4c44-8e27-c02e34b6157f"
+    },
+    "attributes": {},
+    "user": {
+      "userId": "amzn1.ask.account.AGR5QKQIZOHGTYRSKS66E2ELYRNBZ3EGCH364VS75JUHSV3UJ67ALUMHGHFH3LJQIXXZSMYBBSWGS2S3GKBAK5JC3ABWCJMFHKTCRJQADGE5ZYOQIUZEEAYUN4FGUYV4M5KNIWYLXPZWHKUIIW33NDVUWRHVEPYVNXYDWLTLFVW342KGA6VREB3J4H7CGVWYAUBXUHRERYEPARQ"
     }
   },
-  "version": "1.0",
   "request": {
-    "locale": "en-US",
-    "timestamp": "2016-10-27T21:06:28Z",
     "type": "IntentRequest",
-    "requestId": "amzn1.echo-api.request.[unique-value-here]",
+    "requestId": "EdwRequestId.3261839f-d969-43ad-b71c-73553a1fc032",
     "intent": {
+      "name": "PlayByNameIntent",
       "slots": {
+        "playSyn": {
+          "name": "playSyn",
+          "value": "play"
+        },
         "EpisodeName": {
           "name": "EpisodeName",
-          "value": "You're not going to believe this!"
-        },
-        "EpisodeNumber":{
-            "name": "EpisodeNumber",
-            "value": "67"
+          "value": "happy hunting"
         }
-      },
-      "name": "PlayByNumberIntent"
-    }
+      }
+    },
+    "locale": "en-US",
+    "timestamp": "2018-01-09T22:13:21Z"
   },
   "context": {
     "AudioPlayer": {
       "playerActivity": "IDLE"
     },
     "System": {
-      "device": {
-        "supportedInterfaces": {
-          "AudioPlayer": {}
-        }
-      },
       "application": {
-        "applicationId": "amzn1.ask.skill.[unique-value-here]"
+        "applicationId": "amzn1.ask.skill.84156db1-d05b-4c44-8e27-c02e34b6157f"
       },
       "user": {
-        "userId": "amzn1.ask.account.[unique-value-here]"
+        "userId": "amzn1.ask.account.AGR5QKQIZOHGTYRSKS66E2ELYRNBZ3EGCH364VS75JUHSV3UJ67ALUMHGHFH3LJQIXXZSMYBBSWGS2S3GKBAK5JC3ABWCJMFHKTCRJQADGE5ZYOQIUZEEAYUN4FGUYV4M5KNIWYLXPZWHKUIIW33NDVUWRHVEPYVNXYDWLTLFVW342KGA6VREB3J4H7CGVWYAUBXUHRERYEPARQ"
+      },
+      "device": {
+        "supportedInterfaces": {}
       }
     }
-  }
+  },
+  "version": "1.0"
 }
