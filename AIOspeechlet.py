@@ -279,12 +279,10 @@ def handleDescribeEpisodeIntent(intent, session):
             if session_attributes['Radio'] and not session_attributes['Free']:
                 print("Radio")
                 e = AIO.getRadioEpisodeByName(episodeName)
-                session_attributes.update({'lastPlayed':e})
                 session_attributes['Radio']=False
             elif session_attributes['Free'] and not session_attributes['Radio']:
                 print("Free")
                 e = AIO.getFreeEpisodeByName(episodeName)
-                session_attributes.update({'lastPlayed': e})
                 session_attributes['Free'] = False
             else:
                 print("Searching Radio")
@@ -292,10 +290,10 @@ def handleDescribeEpisodeIntent(intent, session):
                 if not e:
                     print("Searching Free")
                     e = AIO.getFreeEpisodeByName(episodeName)
-            return build_response(session_attributes, start_play_url_response(e['url'],"Playing: "+e['Name'],"Now playing "+e['Name']))
+            return build_response(session_attributes, build_speechlet_response("Description","{0}: {1}".format(e['Name'],e['Summary']),"You can ask to play this episode or play something else.",False))
         except TypeError as e:
             raise(e)
-            speech_output = "I couldn't find episode {0} in {1}.".format(str(episodeName),"radio episodes" if session_attributes['Radio'] else "free episodes")
+            speech_output = "I couldn't find episode {0}'s description in {1}.".format(str(episodeName),"radio episodes" if session_attributes['Radio'] else "free episodes")
             reprompt_text = "Please try again."
             session_attributes['Radio']=False
             session_attributes['Free']=False
