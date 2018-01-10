@@ -162,7 +162,7 @@ def handlePlayLatestIntent(intent, session):
 
 def handlePlayAnyIntent(intent, session):
     card_title="playAnyFailed"
-    session_attributes=session['attributes']
+    session_attributes = session['attributes'] if 'attributes' in session else {}
     session_attributes=defaultSessionIfNotSet(session_attributes)
     should_end_session=True
     e=random.choice(AIO.getRadioEpisodes()+AIO.getFreeEpisodes())
@@ -172,16 +172,13 @@ def handlePlayAnyIntent(intent, session):
 def handlePlayByNumberIntent(intent, session):
 
     card_title="playByNumberFailed"
-    session_attributes=session['attributes']
+    session_attributes = session['attributes'] if 'attributes' in session else {}
     session_attributes = defaultSessionIfNotSet(session_attributes)
     should_end_session = True
 
 
     if 'EpisodeNumber' in intent['slots']:
         episodeNumber = intent['slots']['EpisodeNumber']['value'].zfill(3)
-        #print(episodeNumber)
-        #print(type(episodeNumber))
-        session_attributes = session['attributes']
         try:
             if session_attributes['Radio'] and not session_attributes['Free']:
                 print("Radio")
@@ -224,10 +221,9 @@ def handlePlayByNameIntent(intent, session):
 
 
     if 'EpisodeName' in intent['slots']:
-        episodeName = intent['slots']['EpisodeName']['value'].zfill(3)
+        episodeName = intent['slots']['EpisodeName']['value']
         #print(episodeName)
         #print(type(episodeName))
-        session_attributes = session['attributes']
         try:
             if session_attributes['Radio'] and not session_attributes['Free']:
                 print("Radio")
@@ -275,6 +271,41 @@ def handleListFreeIntent(intent, session):
     return build_response(session_attributes,build_speechlet_response("Free Episodes", speech_output, reprompt_text, False))
 
 def handleDescribeEpisodeIntent(intent, session):
+    session_attributes = session['attributes'] if 'attributes' in session else {}
+    session_attributes = defaultSessionIfNotSet(session_attributes)
+    if 'EpisodeName' in intent['slots']:
+        episodeName = intent['slots']['EpisodeName']['value']
+        try:
+            if session_attributes['Radio'] and not session_attributes['Free']:
+                print("Radio")
+                e = AIO.getRadioEpisodeByName(episodeName)
+                session_attributes.update({'lastPlayed':e})
+                session_attributes['Radio']=False
+            elif session_attributes['Free'] and not session_attributes['Radio']:
+                print("Free")
+                e = AIO.getFreeEpisodeByName(episodeName)
+                session_attributes.update({'lastPlayed': e})
+                session_attributes['Free'] = False
+            else:
+                print("Searching Radio")
+                e = AIO.getRadioEpisodeByName(episodeName)
+                if not e:
+                    print("Searching Free")
+                    e = AIO.getFreeEpisodeByName(episodeName)
+            return build_response(session_attributes, start_play_url_response(e['url'],"Playing: "+e['Name'],"Now playing "+e['Name']))
+        except TypeError as e:
+            raise(e)
+            speech_output = "I couldn't find episode {0} in {1}.".format(str(episodeName),"radio episodes" if session_attributes['Radio'] else "free episodes")
+            reprompt_text = "Please try again."
+            session_attributes['Radio']=False
+            session_attributes['Free']=False
+
+    else:
+        speech_output = "playByName was called, but no episode name was found. " \
+                        "Please try again."
+        reprompt_text = None
+
+    return build_response(session_attributes, build_speechlet_response(card_title, speech_output, reprompt_text, should_end_session))
 
 
 
