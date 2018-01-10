@@ -177,7 +177,7 @@ def handlePlayByNumberIntent(intent, session):
     should_end_session = True
 
 
-    if 'EpisodeNumber' in intent['slots']:
+    if 'EpisodeNumber' in intent['slots'] and 'value' in intent['slots']['EpisodeNumber']:
         episodeNumber = intent['slots']['EpisodeNumber']['value'].zfill(3)
         try:
             if session_attributes['Radio'] and not session_attributes['Free']:
@@ -219,7 +219,7 @@ def handlePlayByNameIntent(intent, session):
     should_end_session = True
 
 
-    if 'EpisodeName' in intent['slots']:
+    if 'EpisodeName' in intent['slots'] and 'value' in intent['slots']['EpisodeName']:
         episodeName = intent['slots']['EpisodeName']['value']
         #print(episodeName)
         #print(type(episodeName))
@@ -271,7 +271,7 @@ def handleListFreeIntent(intent, session):
 def handleDescribeEpisodeByNameIntent(intent, session):
     session_attributes = session['attributes'] if 'attributes' in session else {}
     session_attributes = defaultSessionIfNotSet(session_attributes)
-    if 'EpisodeName' in intent['slots']:
+    if 'EpisodeName' in intent['slots'] and 'value' in intent['slots']['EpisodeName']:
         episodeName = intent['slots']['EpisodeName']['value']
         try:
             if session_attributes['Radio'] and not session_attributes['Free']:
@@ -303,7 +303,7 @@ def handleDescribeEpisodeByNameIntent(intent, session):
 def handleDescribeEpisodeByNumberIntent(intent, session):
     session_attributes = session['attributes'] if 'attributes' in session else {}
     session_attributes = defaultSessionIfNotSet(session_attributes)
-    if 'EpisodeNumber' in intent['slots']:
+    if 'EpisodeNumber' in intent['slots'] and 'value' in intent['slots']['EpisodeNumber']:
         episodeNumber = intent['slots']['EpisodeNumber']['value']
         try:
             if session_attributes['Radio'] and not session_attributes['Free']:
