@@ -45,7 +45,7 @@ def saveLastPlaying(userId,audioToken,url:str):
     global REGION_NAME, SESSION_TABLE_NAME
     conn = boto3.resource('dynamodb', region_name=REGION_NAME)
     table = conn.Table(SESSION_TABLE_NAME)
-    resp = table.update_item(Key={"userId": userId}, UpdateExpression="set audioToken=:t,audioURL=:u", ExpressionAttributeValues={":t":audioToken,":u": url}, ReturnValues="UPDATED_NEW")
+    resp = table.update_item(Key={"userId": userId}, UpdateExpression="set audioOffset=:o,audioToken=:t,audioURL=:u", ExpressionAttributeValues={":o":0,":t":audioToken,":u": url}, ReturnValues="UPDATED_NEW")
 
 
 def getLastPlaying(userId):
@@ -205,9 +205,15 @@ def handleResumeIntent(intent,session):
     session_attributes = session['attributes'] if 'attributes' in session else {}
     session_attributes = defaultSessionIfNotSet(session_attributes)
     lp=getLastPlaying(session['user']['userId'])
-    if not lp:
+    if lp == None:
         return build_response(session_attributes,build_speechlet_response("None Resumed",random.choice(["I couldn't find an episode to resume.","I can't seem to find what you were listening to.","I don't see any episode previously playing."]),"You can ask me to play another episode.  For example: Alexa, play Happy Hunting.",False))
     e=AIO.getEpisodeByUrl(lp['audioURL'])
+    print()
+    print(lp)
+    print()
+    print(e)
+    print()
+
     return build_response(session_attributes,start_play_url_response(e['url'], "Resuming: " + e['Name'], "Resuming " + e['Name'],offset=lp['audioOffset']))
 
 def handlePlayLatestIntent(intent, session):
@@ -511,10 +517,10 @@ def lambda_handler(event, context):
 
 print("\n\n")
 
-e=random.choice(AIO.getRadioEpisodes())
-saveLastPlaying("user3",url2token(e['url']),e['url'])
-savePlaybackOffset("user3",url2token(e['url']),56)
-lp=getLastPlaying("user3")
-assert lp['audioURL']==e['url']
-assert lp['audioOffset']==56
-assert lp['audioToken']==url2token(e['url'])
+# e=random.choice(AIO.getRadioEpisodes())
+# saveLastPlaying("user3",url2token(e['url']),e['url'])
+# savePlaybackOffset("user3",url2token(e['url']),56)
+# lp=getLastPlaying("user3")
+# assert lp['audioURL']==e['url']
+# assert lp['audioOffset']==56
+# assert lp['audioToken']==url2token(e['url'])
