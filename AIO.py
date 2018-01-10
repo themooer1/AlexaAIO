@@ -39,17 +39,20 @@ def makeRadioURL(date):
 
 def getRadioEpisodes()->list:
     global radioURL
-    e = requests.get(radioURL,timeout=2).json()
-    for i in e['Episodes']:
-        e['Episodes'][e['Episodes'].index(i)]['url']=makeRadioURL(transformDate(e['Episodes'][e['Episodes'].index(i)]['Date']))
-    e['Episodes']=sorted(e['Episodes'],key=lambda x:dateValue(x['Date']),reverse=True)
-    return e['Episodes']
+    e = requests.get(radioURL,timeout=2).json()['Episodes']
+    for i in e:
+        e[e.index(i)]['url']=makeRadioURL(transformDate(e[e.index(i)]['Date']))
+    e=sorted(e,key=lambda x:dateValue(x['Date']),reverse=True)
+    for episode in e:
+        e[e.index(episode)]['Summary']=stringChoice(episode['Summary'])
+    return e
 
 def getFreeEpisodes()->list:
     global freeURL
     e=requests.get(freeURL,timeout=2).json()['Episodes']
     for episode in e:
         e[e.index(episode)]['Summary']=stringChoice(episode['Summary'])
+        e[e.index(episode)]['url'] = proxyURL(episode['url'])
     return e
 
 def stringChoice(string):
@@ -88,9 +91,15 @@ def fuzzyMatch(string1, string2):
         string2 = string2.replace(char,"")
     return string1==string2
 
+def proxyURL(url:str):
+    return url.replace("http://media.focusonthefamily.com/","https://fotfproxy.tk/")
+
 
 #print(stringChoice("blah blah blah [[me|you]] candle brick sandwich. Summary information [[this|that]][[who|what]]in the world."))
 #print(list(map(lambda x:x['URL'],getRadioEpisodes()['Episodes'])))
 #print(getFreeEpisodes())
 #print(getFreeEpisodeByName("Youre Not going to believe this!!!"))
 #print(getRadioEpisodeByNumber(522))
+#print(getRadioEpisodeByName("NOTAREALEPISODE"))
+#print(getFreeEpisodeByName("Happy Hunting"))
+#print(proxyURL("http://media.focusonthefamily.com/aio/mp3/aiopodcast155.mp3"))

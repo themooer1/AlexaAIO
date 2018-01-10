@@ -1,33 +1,26 @@
 {
   "session": {
-    "new": true,
-    "sessionId": "SessionId.0a11aff4-8de7-4f49-a8a2-d56a1876a13c",
+    "new": false,
+    "sessionId": "SessionId.bd733957-5803-433d-bbf3-de0c02758e64",
     "application": {
       "applicationId": "amzn1.ask.skill.84156db1-d05b-4c44-8e27-c02e34b6157f"
     },
-    "attributes": {},
+    "attributes": {
+      "Radio": false,
+      "Free": false
+    },
     "user": {
       "userId": "amzn1.ask.account.AGR5QKQIZOHGTYRSKS66E2ELYRNBZ3EGCH364VS75JUHSV3UJ67ALUMHGHFH3LJQIXXZSMYBBSWGS2S3GKBAK5JC3ABWCJMFHKTCRJQADGE5ZYOQIUZEEAYUN4FGUYV4M5KNIWYLXPZWHKUIIW33NDVUWRHVEPYVNXYDWLTLFVW342KGA6VREB3J4H7CGVWYAUBXUHRERYEPARQ"
     }
   },
   "request": {
     "type": "IntentRequest",
-    "requestId": "EdwRequestId.3261839f-d969-43ad-b71c-73553a1fc032",
+    "requestId": "EdwRequestId.b6f0de9a-7bc2-49e6-8c2e-68724fb558b4",
     "intent": {
-      "name": "PlayByNameIntent",
-      "slots": {
-        "playSyn": {
-          "name": "playSyn",
-          "value": "play"
-        },
-        "EpisodeName": {
-          "name": "EpisodeName",
-          "value": "happy hunting"
-        }
-      }
+      "name": "PlayAnyIntent"
     },
     "locale": "en-US",
-    "timestamp": "2018-01-09T22:13:21Z"
+    "timestamp": "2018-01-10T00:03:43Z"
   },
   "context": {
     "AudioPlayer": {
