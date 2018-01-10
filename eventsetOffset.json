@@ -1,0 +1,22 @@
+{
+  "version": "string",
+  "context": {
+    "System": {
+      "application": {
+        "applicationId": "amzn1.ask.skill.84156db1-d05b-4c44-8e27-c02e34b6157f"
+      },
+      "user": {
+        "userId": "amzn1.ask.account.AGHPBYF6XQSSF2EHDDHHVSREC65FA2SZUNJKCVMKZUVPYJ5DRMJWM77BFYZ433JJYLX6ZM76WPYA5H7X7A32EM6JVUBL72O4RKA73VKOQQSUJRKPPTSM6YNH4QM7EKVKBXOANLPXETY52K3NQR2QBVGTOHIIEAAANGIP5TDEJELL3UEZQ7D33S2W57B7ZEDMITUGEZY6VIPOYJY"
+      },
+      "device": {}
+    }
+  },
+  "request": {
+    "type": "AudioPlayer.PlaybackStopped",
+    "requestId": "string",
+    "timestamp": "string",
+    "token": "7287cfe35eb86d78f0a3c9141e093dd5ea2d1741b728fc2e72e3338d88a138f2",
+    "offsetInMilliseconds": 6000,
+    "locale": "en-us"
+  }
+}

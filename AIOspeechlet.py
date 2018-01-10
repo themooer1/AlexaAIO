@@ -1,6 +1,13 @@
 from hashlib import sha256
 import AIO
 import random
+import boto3
+import json
+import decimal
+
+REGION_NAME="us-east-1"
+SESSION_TABLE_NAME="AlexaAIOSession"
+
 """
 This sample demonstrates a simple skill built with the Amazon Alexa Skills Kit.
 The Intent Schema, Custom Slots, and Sample Utterances for this skill, as well
@@ -26,6 +33,48 @@ def url2token(url:str):
     tokenGen=sha256()
     tokenGen.update(url.encode())
     return tokenGen.hexdigest()
+
+def savePlaybackOffset(userId, audioToken, offset:int):
+    global REGION_NAME, SESSION_TABLE_NAME
+    conn=boto3.resource('dynamodb',region_name=REGION_NAME)
+    table=conn.Table(SESSION_TABLE_NAME)
+    resp=table.update_item(Key={"userId":userId}, UpdateExpression="set audioOffset=:o", ExpressionAttributeValues={":o":offset},ReturnValues="UPDATED_NEW")
+
+
+def saveLastPlaying(userId,audioToken,url:str):
+    global REGION_NAME, SESSION_TABLE_NAME
+    conn = boto3.resource('dynamodb', region_name=REGION_NAME)
+    table = conn.Table(SESSION_TABLE_NAME)
+    resp = table.update_item(Key={"userId": userId}, UpdateExpression="set audioToken=:t,audioURL=:u", ExpressionAttributeValues={":t":audioToken,":u": url}, ReturnValues="UPDATED_NEW")
+
+
+def getLastPlaying(userId):
+    global REGION_NAME, SESSION_TABLE_NAME
+    conn = boto3.resource('dynamodb', region_name=REGION_NAME)
+    table = conn.Table(SESSION_TABLE_NAME)
+    resp=table.get_item(Key={"userId":userId})
+    if 'Item' not in resp:
+        return None
+    else:
+        return convertAllDecToInt(resp['Item'])
+
+
+def convertAllDecToInt(item):
+    if type(item)==dict:
+        i = item.copy()
+        for key, value in item.items():
+            if type(value)==decimal.Decimal:
+                i[key]=int(value)
+    elif type(item)==list:
+        i = item.copy()
+        for j in range(0,len(i)-1):
+            if type(item[j])==decimal.Decimal:
+                i[j]=int(item[j])
+    else:
+        raise ValueError("Only works on dicts and lists")
+    return i
+
+
 
 # --------------- Helpers that build all of the responses ----------------------
 
@@ -94,9 +143,13 @@ def build_audio_stop_directive(messageID:str=str(random.random()),dialogID:str=s
     }
 
 
-def start_play_url_response(url:str,title="Playing", output="Now Playing", reprompt_text=None, should_end_session=True):
+def start_play_url_response(url:str, title="Playing", output="Now Playing", reprompt_text=None, should_end_session=True, offset=0, **kwargs):
+    session = kwargs['session'] if 'session' in kwargs else None
     token=url2token(url)
-    return build_speechlet_response(title,output,reprompt_text,should_end_session,directive=build_audio_directive("Play", token, url))
+    if session:
+        print("Saving Session")
+        saveLastPlaying(session['user']['userId'], token, url)
+    return build_speechlet_response(title, output, reprompt_text,should_end_session, directive=build_audio_directive("Play", token, url, offset))
 
 
 
@@ -143,22 +196,27 @@ def handle_session_end_request():
         card_title, speech_output, None, should_end_session))
 
 def handlePauseIntent(intent,session):
-    return build_response(session['attributes'], build_speechlet_response("Pause", "Paused", None, True,directive=build_audio_stop_directive()))
+    return {"response": {"shouldEndSession": True, "directives": [{"type": "AudioPlayer.Stop"}]}, "version": "1.0"}
 
 def handleStopIntent(intent,session):
-    return build_response(session['attributes'],build_speechlet_response("Stop","Stopping",None,True,directive=build_audio_stop_directive()))
+    return handle_session_end_request()
 
 def handleResumeIntent(intent,session):
-    return build_response(session['attributes'],build_speechlet_response("ResumeNotImplemented","Unfortunately, the resume function is not yet implemented.","Just ask to play an episode by name or number.",False))
+    session_attributes = session['attributes'] if 'attributes' in session else {}
+    session_attributes = defaultSessionIfNotSet(session_attributes)
+    lp=getLastPlaying(session['user']['userId'])
+    if not lp:
+        return build_response(session_attributes,build_speechlet_response("None Resumed",random.choice(["I couldn't find an episode to resume.","I can't seem to find what you were listening to.","I don't see any episode previously playing."]),"You can ask me to play another episode.  For example: Alexa, play Happy Hunting.",False))
+    e=AIO.getEpisodeByUrl(lp['audioURL'])
+    return build_response(session_attributes,start_play_url_response(e['url'], "Resuming: " + e['Name'], "Resuming " + e['Name'],offset=lp['audioOffset']))
 
 def handlePlayLatestIntent(intent, session):
-    card_title="playLatestFailed"
-    session_attributes=session['attributes']
-    session_attributes=defaultSessionIfNotSet(session_attributes)
+    session_attributes = session['attributes'] if 'attributes' in session else {}
+    session_attributes = defaultSessionIfNotSet(session_attributes)
     should_end_session=True
     e=AIO.getRadioEpisodes()[0]
     session_attributes.update({'lastPlayed':e})
-    return build_response(session_attributes,start_play_url_response(e['url'],"Playing: "+e['Name'],"Now playing "+e['Name']))
+    return build_response(session_attributes,start_play_url_response(e['url'],"Playing: "+e['Name'],"Now playing "+e['Name'],session=session))
 
 def handlePlayAnyIntent(intent, session):
     card_title="playAnyFailed"
@@ -167,7 +225,7 @@ def handlePlayAnyIntent(intent, session):
     should_end_session=True
     e=random.choice(AIO.getRadioEpisodes()+AIO.getFreeEpisodes())
     session_attributes.update({'lastPlayed':e})
-    return build_response(session_attributes,start_play_url_response(e['url'],"Playing: "+e['Name'],"Now playing "+e['Name']))
+    return build_response(session_attributes,start_play_url_response(e['url'],"Playing: "+e['Name'],"Now playing "+e['Name'],session=session))
 
 def handlePlayByNumberIntent(intent, session):
 
@@ -196,7 +254,7 @@ def handlePlayByNumberIntent(intent, session):
                 if not e:
                     print("Searching Free")
                     e = AIO.getFreeEpisodeByNumber(episodeNumber)
-            return build_response(session_attributes, start_play_url_response(e['url'],"Playing: "+e['Name'],"Now playing "+e['Name']))
+            return build_response(session_attributes, start_play_url_response(e['url'],"Playing: "+e['Name'],"Now playing "+e['Name'],session=session))
         except TypeError as e:
             speech_output = "I couldn't find episode {0} in {1}.".format(str(episodeNumber),"radio episodes" if session_attributes['Radio'] else "free episodes")
             if not session_attributes['Radio'] and session_attributes['Free']:
@@ -242,8 +300,8 @@ def handlePlayByNameIntent(intent, session):
                 if not e:
                     print("Searching Free")
                     e = AIO.getFreeEpisodeByName(episodeName)
-            return build_response(session_attributes, start_play_url_response(e['url'],"Playing: "+e['Name'],"Now playing "+e['Name']))
-        except TypeError as e:
+            return build_response(session_attributes, start_play_url_response(e['url'],"Playing: "+e['Name'],"Now playing "+e['Name'], session=session))
+        except ValueError as e:
             speech_output = "I couldn't find episode {0} in {1}.".format(str(episodeName),"radio episodes" if session_attributes['Radio'] else "free episodes")
             if not session_attributes['Radio'] and session_attributes['Free']:
                 speech_output = "I couldn't find episode {0}.".format(str(episodeName))
@@ -424,6 +482,11 @@ def lambda_handler(event, context):
     """ Route the incoming request based on type (LaunchRequest, IntentRequest,
     etc.) The JSON body of the request is provided in the event parameter.
     """
+    #Respond to special requests
+
+    if event['request']['type'] == "AudioPlayer.PlaybackStopped":
+        return savePlaybackOffset(event['context']['System']['user']['userId'], event['request']['token'], event['request']['offsetInMilliseconds'])
+
     print("event.session.application.applicationId=" +
           event['session']['application']['applicationId'])
 
@@ -437,8 +500,7 @@ def lambda_handler(event, context):
          raise ValueError("Invalid Application ID")
 
     if event['session']['new']:
-        on_session_started({'requestId': event['request']['requestId']},
-                           event['session'])
+        on_session_started({'requestId': event['request']['requestId']},event['session'])
 
     if event['request']['type'] == "LaunchRequest":
         return on_launch(event['request'], event['session'])
@@ -447,4 +509,12 @@ def lambda_handler(event, context):
     elif event['request']['type'] == "SessionEndedRequest":
         return on_session_ended(event['request'], event['session'])
 
-print("\n\n\n\n")
+print("\n\n")
+
+e=random.choice(AIO.getRadioEpisodes())
+saveLastPlaying("user3",url2token(e['url']),e['url'])
+savePlaybackOffset("user3",url2token(e['url']),56)
+lp=getLastPlaying("user3")
+assert lp['audioURL']==e['url']
+assert lp['audioOffset']==56
+assert lp['audioToken']==url2token(e['url'])

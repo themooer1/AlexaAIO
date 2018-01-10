@@ -78,6 +78,13 @@ def getFreeEpisodeByNumber(episodeNumber):
     candidates=list(filter(lambda x: x['Number']==str(episodeNumber).zfill(3), getFreeEpisodes()))
     return candidates[0] if len(candidates) > 0 else None
 
+def getEpisodeByUrl(url:str):
+    url=proxyURL(url)
+    candidates=list(filter(lambda x: x['url']==url, getRadioEpisodes()))
+    if len(candidates) < 0:
+        candidates = list(filter(lambda x: x['url'] == url, getFreeEpisodes()))
+    return candidates[0] if len(candidates) > 0 else None
+
 def fuzzyMatch(string1, string2):
     replacements={"1":"one","2":"two","3":"three","4":"four","5":"five","6":"six","7":"seven","8":"eight","9":"nine","gonna":"going to"}
     whiteout='.,"\'!?/$()'
@@ -94,6 +101,7 @@ def fuzzyMatch(string1, string2):
 def proxyURL(url:str):
     return url.replace("http://media.focusonthefamily.com/","https://fotfproxy.tk/")
 
+#------Tests------
 
 #print(stringChoice("blah blah blah [[me|you]] candle brick sandwich. Summary information [[this|that]][[who|what]]in the world."))
 #print(list(map(lambda x:x['URL'],getRadioEpisodes()['Episodes'])))
@@ -101,5 +109,7 @@ def proxyURL(url:str):
 #print(getFreeEpisodeByName("Youre Not going to believe this!!!"))
 #print(getRadioEpisodeByNumber(522))
 #print(getRadioEpisodeByName("NOTAREALEPISODE"))
-print(getFreeEpisodeByName("Happy Hunting"))
+#print(getFreeEpisodeByName("happy hunting"))
 #print(proxyURL("http://media.focusonthefamily.com/aio/mp3/aiopodcast155.mp3"))
+#print(getEpisodeByUrl("http://media.focusonthefamily.com/fotf/mp3/aio/aio_20180102.mp3"))
+#print(getEpisodeByUrl("https://fotfproxy.tk/fotf/mp3/aio/aio_20180102.mp3"))
