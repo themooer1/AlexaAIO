@@ -67,7 +67,7 @@ def getRadioEpisodeByName(name):
     return candidates[0] if len(candidates) > 0 else None
 
 def getFreeEpisodeByName(name):
-    candidates=list(filter(lambda x:fuzzyMatch(x['Name'],name,getFreeEpisodes())))
+    candidates=list(filter(lambda x:fuzzyMatch(x['Name'],name),getFreeEpisodes()))
     return candidates[0] if len(candidates)>0 else None
 
 def getRadioEpisodeByNumber(episodeNumber):
@@ -101,5 +101,5 @@ def proxyURL(url:str):
 #print(getFreeEpisodeByName("Youre Not going to believe this!!!"))
 #print(getRadioEpisodeByNumber(522))
 #print(getRadioEpisodeByName("NOTAREALEPISODE"))
-#print(getFreeEpisodeByName("Happy Hunting"))
+print(getFreeEpisodeByName("Happy Hunting"))
 #print(proxyURL("http://media.focusonthefamily.com/aio/mp3/aiopodcast155.mp3"))
