@@ -199,6 +199,8 @@ def handlePlayByNumberIntent(intent, session):
             return build_response(session_attributes, start_play_url_response(e['url'],"Playing: "+e['Name'],"Now playing "+e['Name']))
         except TypeError as e:
             speech_output = "I couldn't find episode {0} in {1}.".format(str(episodeNumber),"radio episodes" if session_attributes['Radio'] else "free episodes")
+            if not session_attributes['Radio'] and session_attributes['Free']:
+                speech_output = "I couldn't find episode {0}.".format(str(episodeNumber))
             reprompt_text = "Please try again."
             session_attributes['Radio']=False
             session_attributes['Free']=False
@@ -243,6 +245,8 @@ def handlePlayByNameIntent(intent, session):
             return build_response(session_attributes, start_play_url_response(e['url'],"Playing: "+e['Name'],"Now playing "+e['Name']))
         except TypeError as e:
             speech_output = "I couldn't find episode {0} in {1}.".format(str(episodeName),"radio episodes" if session_attributes['Radio'] else "free episodes")
+            if not session_attributes['Radio'] and session_attributes['Free']:
+                speech_output = "I couldn't find episode {0}.".format(str(episodeName))
             reprompt_text = "Please try again."
             session_attributes['Radio']=False
             session_attributes['Free']=False
@@ -291,6 +295,8 @@ def handleDescribeEpisodeByNameIntent(intent, session):
             return build_response(session_attributes, build_speechlet_response("Description","{0}: {1}".format(e['Name'],e['Summary']),"You can ask to play this episode or play something else.",False))
         except TypeError as e:
             speech_output = "I couldn't find episode {0}'s description in {1}.".format(str(episodeName),"radio episodes" if session_attributes['Radio'] else "free episodes")
+            if not session_attributes['Radio'] and session_attributes['Free']:
+                speech_output = "I couldn't find episode {0}'s description.".format(str(episodeName))
             reprompt_text = "Please try again."
             session_attributes['Radio']=False
             session_attributes['Free']=False
@@ -323,6 +329,8 @@ def handleDescribeEpisodeByNumberIntent(intent, session):
             return build_response(session_attributes, build_speechlet_response("Description","{0}: {1}".format(e['Name'],e['Summary']),"You can ask to play this episode or play something else.",False))
         except TypeError as e:
             speech_output = "I couldn't find episode {0}'s description in {1}.".format(str(episodeNumber),"radio episodes" if session_attributes['Radio'] else "free episodes")
+            if not session_attributes['Radio'] and session_attributes['Free']:
+                speech_output = "I couldn't find episode {0}'s description.".format(str(episodeNumber))
             reprompt_text = "Please try again."
             session_attributes['Radio'] = False
             session_attributes['Free'] = False
