@@ -198,7 +198,6 @@ def handlePlayByNumberIntent(intent, session):
                     e = AIO.getFreeEpisodeByNumber(episodeNumber)
             return build_response(session_attributes, start_play_url_response(e['url'],"Playing: "+e['Name'],"Now playing "+e['Name']))
         except TypeError as e:
-            raise(e)
             speech_output = "I couldn't find episode {0} in {1}.".format(str(episodeNumber),"radio episodes" if session_attributes['Radio'] else "free episodes")
             reprompt_text = "Please try again."
             session_attributes['Radio']=False
@@ -243,7 +242,6 @@ def handlePlayByNameIntent(intent, session):
                     e = AIO.getFreeEpisodeByName(episodeName)
             return build_response(session_attributes, start_play_url_response(e['url'],"Playing: "+e['Name'],"Now playing "+e['Name']))
         except TypeError as e:
-            raise(e)
             speech_output = "I couldn't find episode {0} in {1}.".format(str(episodeName),"radio episodes" if session_attributes['Radio'] else "free episodes")
             reprompt_text = "Please try again."
             session_attributes['Radio']=False
@@ -270,7 +268,7 @@ def handleListFreeIntent(intent, session):
     reprompt_text = "Which episode do you want to play?  You can ask for a description, say the name of the episode, or say the number. "
     return build_response(session_attributes,build_speechlet_response("Free Episodes", speech_output, reprompt_text, False))
 
-def handleDescribeEpisodeIntent(intent, session):
+def handleDescribeEpisodeByNameIntent(intent, session):
     session_attributes = session['attributes'] if 'attributes' in session else {}
     session_attributes = defaultSessionIfNotSet(session_attributes)
     if 'EpisodeName' in intent['slots']:
@@ -292,18 +290,47 @@ def handleDescribeEpisodeIntent(intent, session):
                     e = AIO.getFreeEpisodeByName(episodeName)
             return build_response(session_attributes, build_speechlet_response("Description","{0}: {1}".format(e['Name'],e['Summary']),"You can ask to play this episode or play something else.",False))
         except TypeError as e:
-            raise(e)
             speech_output = "I couldn't find episode {0}'s description in {1}.".format(str(episodeName),"radio episodes" if session_attributes['Radio'] else "free episodes")
             reprompt_text = "Please try again."
             session_attributes['Radio']=False
             session_attributes['Free']=False
-
     else:
-        speech_output = "playByName was called, but no episode name was found. " \
+        speech_output = "describeEpisodeByName was called, but no episode name was found in your request.  " \
                         "Please try again."
         reprompt_text = None
+    return build_response(session_attributes, build_speechlet_response("Request Episode Name Not Found", speech_output, reprompt_text, False))
 
-    return build_response(session_attributes, build_speechlet_response(card_title, speech_output, reprompt_text, should_end_session))
+def handleDescribeEpisodeByNumberIntent(intent, session):
+    session_attributes = session['attributes'] if 'attributes' in session else {}
+    session_attributes = defaultSessionIfNotSet(session_attributes)
+    if 'EpisodeNumber' in intent['slots']:
+        episodeNumber = intent['slots']['EpisodeNumber']['value']
+        try:
+            if session_attributes['Radio'] and not session_attributes['Free']:
+                print("Radio")
+                e = AIO.getRadioEpisodeByNumber(episodeNumber)
+                session_attributes['Radio'] = False
+            elif session_attributes['Free'] and not session_attributes['Radio']:
+                print("Free")
+                e = AIO.getFreeEpisodeByNumber(episodeNumber)
+                session_attributes['Free'] = False
+            else:
+                print("Searching Radio")
+                e = AIO.getRadioEpisodeByNumber(episodeNumber)
+                if not e:
+                    print("Searching Free")
+                    e = AIO.getFreeEpisodeByNumber(episodeNumber)
+            return build_response(session_attributes, build_speechlet_response("Description","{0}: {1}".format(e['Name'],e['Summary']),"You can ask to play this episode or play something else.",False))
+        except TypeError as e:
+            speech_output = "I couldn't find episode {0}'s description in {1}.".format(str(episodeNumber),"radio episodes" if session_attributes['Radio'] else "free episodes")
+            reprompt_text = "Please try again."
+            session_attributes['Radio'] = False
+            session_attributes['Free'] = False
+    else:
+        speech_output = "describeEpisodeByNumber was called, but no episode with that number was found in your request.  " \
+                        "Please try again."
+        reprompt_text = None
+    return build_response(session_attributes, build_speechlet_response("Request Episode Number Not Found", speech_output, reprompt_text, False))
 
 
 
@@ -355,8 +382,10 @@ def on_intent(intent_request, session):
         return handleListRadioIntent(intent, session)
     elif intent_name == "ListFreeIntent":
         return handleListFreeIntent(intent, session)
-    elif intent_name == "DescribeEpisodeIntent":
-        return handleDescribeEpisodeIntent(intent, session)
+    elif intent_name == "DescribeEpisodeByNameIntent":
+        return handleDescribeEpisodeByNameIntent(intent, session)
+    elif intent_name == "DescribeEpisodeByNumberIntent":
+        return handleDescribeEpisodeByNumberIntent(intent, session)
     elif intent_name == "AMAZON.HelpIntent":
         return get_welcome_response()
     elif intent_name == "AMAZON.PauseIntent":
