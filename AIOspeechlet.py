@@ -174,10 +174,6 @@ def get_welcome_response():
     session_attributes =default_session
     card_title = "Adventures in Odyssey"
     speech_output = "Welcome to Adventues in Odyssey. " \
-                    "You can ask me to play an episode currently on the radio or a free episode from whitsend.org." \
-                    "If you don't know the name of the episode you can ask - What's on the radio?" \
-                    "Or just say - Play the latest episode." \
-                    "If you just want to hear anything say - play anything, play whatever, or play a random episode." \
                     "The latest episode is episode {0}, {1}".format(latest['Number'],latest['Name'])
     # If the user either does not reply to the welcome message or says something
     # that is not understood, they will be prompted again with this text.
@@ -404,9 +400,17 @@ def handleDescribeEpisodeByNumberIntent(intent, session):
         reprompt_text = None
     return build_response(session_attributes, build_speechlet_response("Request Episode Number Not Found", speech_output, reprompt_text, False))
 
+def handleHelpIntent(intent, session):
+    session_attributes = session['attributes'] if 'attributes' in session else {}
+    session_attributes = defaultSessionIfNotSet(session_attributes)
+    speech_output = "You can ask me to play an episode currently on the radio or a free episode from whitsend.org." \
+    "If you don't know the name of the episode you can ask - What's on the radio?" \
+    "Or just say - Play the latest episode." \
+    "If you just want to hear anything say - play anything, play whatever, or play a random episode."
+    reprompt_text = None
+    return build_response(session_attributes,build_speechlet_response("Help",speech_output,reprompt_text,False))
 
-
-# --------------- Events ------------------
+        # --------------- Events ------------------
 
 def on_session_started(session_started_request, session):
     """ Called when the session starts """
@@ -459,7 +463,7 @@ def on_intent(intent_request, session):
     elif intent_name == "DescribeEpisodeByNumberIntent":
         return handleDescribeEpisodeByNumberIntent(intent, session)
     elif intent_name == "AMAZON.HelpIntent":
-        return get_welcome_response()
+        return handleHelpIntent(intent, session)
     elif intent_name == "AMAZON.PauseIntent":
         return handlePauseIntent(intent,session)
     elif intent_name == "AMAZON.ResumeIntent":
