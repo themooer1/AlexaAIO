@@ -7,3 +7,4 @@ dist
 event.json
 __pycache__
 __pycache__/*
+*.json
