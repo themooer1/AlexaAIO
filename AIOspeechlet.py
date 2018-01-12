@@ -86,8 +86,8 @@ def build_speechlet_response(title, output, reprompt_text, should_end_session,di
         },
         'card': {
             'type': 'Simple',
-            'title': "SessionSpeechlet - " + title,
-            'content': "SessionSpeechlet - " + output
+            'title': title,
+            'content': output
         },
         'reprompt': {
             'outputSpeech': {
@@ -204,12 +204,6 @@ def handleResumeIntent(intent,session):
     if lp == None:
         return build_response(session_attributes,build_speechlet_response("None Resumed",random.choice(["I couldn't find an episode to resume.","I can't seem to find what you were listening to.","I don't see any episode previously playing."]),"You can ask me to play another episode.  For example: Alexa, play Happy Hunting.",False))
     e=AIO.getEpisodeByUrl(lp['audioURL'])
-    print()
-    print(lp)
-    print()
-    print(e)
-    print()
-
     return build_response(session_attributes,start_play_url_response(e['url'], "Resuming: " + e['Name'], "Resuming " + e['Name'],offset=lp['audioOffset']))
 
 def handlePlayLatestIntent(intent, session):
@@ -221,7 +215,7 @@ def handlePlayLatestIntent(intent, session):
     return build_response(session_attributes,start_play_url_response(e['url'],"Playing: "+e['Name'],"Now playing "+e['Name'],session=session))
 
 def handlePlayAnyIntent(intent, session):
-    card_title="playAnyFailed"
+    card_title="Play Random Episode Failed"
     session_attributes = session['attributes'] if 'attributes' in session else {}
     session_attributes=defaultSessionIfNotSet(session_attributes)
     should_end_session=True
@@ -231,7 +225,7 @@ def handlePlayAnyIntent(intent, session):
 
 def handlePlayByNumberIntent(intent, session):
 
-    card_title="playByNumberFailed"
+    card_title="Play Episode {} Failed"
     session_attributes = session['attributes'] if 'attributes' in session else {}
     session_attributes = defaultSessionIfNotSet(session_attributes)
     should_end_session = True
@@ -239,6 +233,7 @@ def handlePlayByNumberIntent(intent, session):
 
     if 'EpisodeNumber' in intent['slots'] and 'value' in intent['slots']['EpisodeNumber']:
         episodeNumber = intent['slots']['EpisodeNumber']['value'].zfill(3)
+        card_title=card_title.format(str(episodeNumber))
         try:
             if session_attributes['Radio'] and not session_attributes['Free']:
                 print("Radio")
@@ -266,7 +261,8 @@ def handlePlayByNumberIntent(intent, session):
             session_attributes['Free']=False
 
     else:
-        speech_output = "playByNumber was called, but no episode name was found. " \
+        card_title=card_title.format("")
+        speech_output = "No episode with that number was found. " \
                         "Please try again."
         reprompt_text = None
 
@@ -274,8 +270,7 @@ def handlePlayByNumberIntent(intent, session):
 
 
 def handlePlayByNameIntent(intent, session):
-
-    card_title="playByNameFailed"
+    card_title = "Play Episode: {} Failed"
     session_attributes=session['attributes']
     session_attributes=defaultSessionIfNotSet(session_attributes)
     should_end_session = True
@@ -283,6 +278,7 @@ def handlePlayByNameIntent(intent, session):
 
     if 'EpisodeName' in intent['slots'] and 'value' in intent['slots']['EpisodeName']:
         episodeName = intent['slots']['EpisodeName']['value']
+        card_title = card_title.format(str(episodeName))
         #print(episodeName)
         #print(type(episodeName))
         try:
@@ -312,6 +308,7 @@ def handlePlayByNameIntent(intent, session):
             session_attributes['Free']=False
 
     else:
+        card_title = card_title.format("")
         speech_output = "playByName was called, but no episode name was found. " \
                         "Please try again."
         reprompt_text = None
@@ -352,7 +349,7 @@ def handleDescribeEpisodeByNameIntent(intent, session):
                 if not e:
                     print("Searching Free")
                     e = AIO.getFreeEpisodeByName(episodeName)
-            return build_response(session_attributes, build_speechlet_response("Description","{0}: {1}".format(e['Name'],e['Summary']),"You can ask to play this episode or play something else.",False))
+            return build_response(session_attributes, build_speechlet_response("Description","{0}: {1}".format(e['Name'],e['Summary']),"You can ask to play this episode or play something else.",True))
         except TypeError as e:
             speech_output = "I couldn't find episode {0}'s description in {1}.".format(str(episodeName),"radio episodes" if session_attributes['Radio'] else "free episodes")
             if not session_attributes['Radio'] and session_attributes['Free']:
@@ -361,10 +358,10 @@ def handleDescribeEpisodeByNameIntent(intent, session):
             session_attributes['Radio']=False
             session_attributes['Free']=False
     else:
-        speech_output = "describeEpisodeByName was called, but no episode name was found in your request.  " \
-                        "Please try again."
+        speech_output = "I didn't catch the episode you wanted to know more about.  " \
+                        "Please tell me again."
         reprompt_text = None
-    return build_response(session_attributes, build_speechlet_response("Request Episode Name Not Found", speech_output, reprompt_text, False))
+    return build_response(session_attributes, build_speechlet_response("Describe Episode: Name Not Heard", speech_output, reprompt_text, False))
 
 def handleDescribeEpisodeByNumberIntent(intent, session):
     session_attributes = session['attributes'] if 'attributes' in session else {}
@@ -386,7 +383,7 @@ def handleDescribeEpisodeByNumberIntent(intent, session):
                 if not e:
                     print("Searching Free")
                     e = AIO.getFreeEpisodeByNumber(episodeNumber)
-            return build_response(session_attributes, build_speechlet_response("Description","{0}: {1}".format(e['Name'],e['Summary']),"You can ask to play this episode or play something else.",False))
+            return build_response(session_attributes, build_speechlet_response("Description","{0}: {1}".format(e['Name'],e['Summary']),"You can ask to play this episode or play something else.",True))
         except TypeError as e:
             speech_output = "I couldn't find episode {0}'s description in {1}.".format(str(episodeNumber),"radio episodes" if session_attributes['Radio'] else "free episodes")
             if not session_attributes['Radio'] and session_attributes['Free']:
@@ -395,18 +392,19 @@ def handleDescribeEpisodeByNumberIntent(intent, session):
             session_attributes['Radio'] = False
             session_attributes['Free'] = False
     else:
-        speech_output = "describeEpisodeByNumber was called, but no episode with that number was found in your request.  " \
-                        "Please try again."
+        speech_output = "I didn't hear the number of the episode you wanted to know more about.  " \
+                        "Try saying that again."
         reprompt_text = None
-    return build_response(session_attributes, build_speechlet_response("Request Episode Number Not Found", speech_output, reprompt_text, False))
+    return build_response(session_attributes, build_speechlet_response("Describe Episode: Number Not Heard", speech_output, reprompt_text, True))
 
 def handleHelpIntent(intent, session):
     session_attributes = session['attributes'] if 'attributes' in session else {}
     session_attributes = defaultSessionIfNotSet(session_attributes)
     speech_output = "You can ask me to play an episode currently on the radio or a free episode from whitsend.org." \
-    "If you don't know the name of the episode you can ask - What's on the radio?" \
-    "Or just say - Play the latest episode." \
-    "If you just want to hear anything say - play anything, play whatever, or play a random episode."
+    "  If you don't know the name of the episode you can ask - What's on the radio?" \
+    "   Or just say - Play the latest episode." \
+    "  If you just want to hear anything say - play anything, play whatever, or play a random episode." \
+    "  What would you like me to play?"
     reprompt_text = None
     return build_response(session_attributes,build_speechlet_response("Help",speech_output,reprompt_text,False))
 
