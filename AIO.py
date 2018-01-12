@@ -80,7 +80,6 @@ def getFreeEpisodeByNumber(episodeNumber):
 
 def getEpisodeByUrl(url:str):
     url=proxyURL(url)
-    print(url)
     candidates=list(filter(lambda x: x['url']==url, getRadioEpisodes()))
     if len(candidates) < 1:
         candidates = list(filter(lambda x: x['url'] == url, getFreeEpisodes()))
@@ -114,4 +113,4 @@ def proxyURL(url:str):
 #print(proxyURL("http://media.focusonthefamily.com/aio/mp3/aiopodcast155.mp3"))
 #print(getEpisodeByUrl("http://media.focusonthefamily.com/fotf/mp3/aio/aio_20180102.mp3"))
 #print(getEpisodeByUrl("https://fotfproxy.tk/fotf/mp3/aio/aio_20180102.mp3"))
-print(getEpisodeByUrl("https://fotfproxy.tk/aio/mp3/aiopodcast155.mp3"))
+#print(getEpisodeByUrl("https://fotfproxy.tk/aio/mp3/aiopodcast155.mp3"))

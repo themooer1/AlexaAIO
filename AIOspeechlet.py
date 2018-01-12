@@ -185,7 +185,7 @@ def get_welcome_response():
 
 def handle_session_end_request():
     card_title = "Farewell from Adventures in Odyssey"
-    speech_output = None
+    speech_output = ""
     # Setting this to true ends the session and exits the skill.
     should_end_session = True
     return build_response({}, build_speechlet_response(
@@ -359,7 +359,7 @@ def handleDescribeEpisodeByNameIntent(intent, session):
             session_attributes['Free']=False
     else:
         speech_output = "I didn't catch the episode you wanted to know more about.  " \
-                        "Please tell me again."
+                        "Can you tell me again?"
         reprompt_text = None
     return build_response(session_attributes, build_speechlet_response("Describe Episode: Name Not Heard", speech_output, reprompt_text, False))
 
@@ -393,7 +393,7 @@ def handleDescribeEpisodeByNumberIntent(intent, session):
             session_attributes['Free'] = False
     else:
         speech_output = "I didn't hear the number of the episode you wanted to know more about.  " \
-                        "Try saying that again."
+                        "Can you say that again?"
         reprompt_text = None
     return build_response(session_attributes, build_speechlet_response("Describe Episode: Number Not Heard", speech_output, reprompt_text, True))
 
