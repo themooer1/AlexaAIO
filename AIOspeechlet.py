@@ -2,19 +2,15 @@ from hashlib import sha256
 import AIO
 import random
 import boto3
-import json
 import decimal
+import time
 
 REGION_NAME="us-east-1"
 SESSION_TABLE_NAME="AlexaAIOSession"
+PAUSE_EXPIRE_DAYS=10
 
 """
-This sample demonstrates a simple skill built with the Amazon Alexa Skills Kit.
-The Intent Schema, Custom Slots, and Sample Utterances for this skill, as well
-as testing instructions are located at http://amzn.to/1LzFrj6
-
-For additional samples, visit the Alexa Skills Kit Getting Started guide at
-http://amzn.to/1LGWsLG
+This skill can play episodes of Adventures in Odyssey from their online radio broadcast, and free episodes available on their website.
 """
 
 # --------------- Miscellaneous Helpers ----------------------
@@ -38,14 +34,14 @@ def savePlaybackOffset(userId, audioToken, offset:int):
     global REGION_NAME, SESSION_TABLE_NAME
     conn=boto3.resource('dynamodb',region_name=REGION_NAME)
     table=conn.Table(SESSION_TABLE_NAME)
-    resp=table.update_item(Key={"userId":userId}, UpdateExpression="set audioOffset=:o", ExpressionAttributeValues={":o":offset},ReturnValues="UPDATED_NEW")
+    resp = table.update_item(Key={"userId":userId}, UpdateExpression="set audioOffset=:o, lastUpdated=:l", ExpressionAttributeValues={":l":int(time.time())+86400*PAUSE_EXPIRE_DAYS, ":o": offset}, ReturnValues="UPDATED_NEW")
 
 
 def saveLastPlaying(userId,audioToken,url:str):
     global REGION_NAME, SESSION_TABLE_NAME
     conn = boto3.resource('dynamodb', region_name=REGION_NAME)
     table = conn.Table(SESSION_TABLE_NAME)
-    resp = table.update_item(Key={"userId": userId}, UpdateExpression="set audioOffset=:o,audioToken=:t,audioURL=:u", ExpressionAttributeValues={":o":0,":t":audioToken,":u": url}, ReturnValues="UPDATED_NEW")
+    resp = table.update_item(Key={"userId": userId}, UpdateExpression="set lastUpdated=:l,audioOffset=:o,audioToken=:t,audioURL=:u", ExpressionAttributeValues={":l":int(time.time())+86400*PAUSE_EXPIRE_DAYS, ":o": 0, ":t": audioToken, ":u": url}, ReturnValues="UPDATED_NEW")
 
 
 def getLastPlaying(userId):
@@ -173,8 +169,9 @@ def get_welcome_response():
 
     session_attributes =default_session
     card_title = "Adventures in Odyssey"
-    speech_output = "Welcome to Adventues in Odyssey. " \
-                    "The latest episode is episode {0}, {1}".format(latest['Number'],latest['Name'])
+    speech_output = "Welcome to Adventues in Odyssey.  " \
+                    "The latest episode is episode {0}, {1}.".format(latest['Number'],latest['Name']) +\
+                    "  What would you like to do?"
     # If the user either does not reply to the welcome message or says something
     # that is not understood, they will be prompted again with this text.
     reprompt_text = "You can ask to play an episode by name, list available episodes, or play a random episode. "
@@ -202,7 +199,7 @@ def handleResumeIntent(intent,session):
     session_attributes = defaultSessionIfNotSet(session_attributes)
     lp=getLastPlaying(session['user']['userId'])
     if lp == None:
-        return build_response(session_attributes,build_speechlet_response("None Resumed",random.choice(["I couldn't find an episode to resume.","I can't seem to find what you were listening to.","I don't see any episode previously playing."]),"You can ask me to play another episode.  For example: Alexa, play Happy Hunting.",False))
+        return build_response(session_attributes,build_speechlet_response("None Resumed",random.choice(["I couldn't find an episode to resume.","I can't seem to find what you were listening to.","I don't see any episode previously playing."])+"  What would you like me to play?","You can ask me to play another episode.  For example: Alexa, play Happy Hunting.",False))
     e=AIO.getEpisodeByUrl(lp['audioURL'])
     return build_response(session_attributes,start_play_url_response(e['url'], "Resuming: " + e['Name'], "Resuming " + e['Name'],offset=lp['audioOffset']))
 
