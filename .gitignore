@@ -5,6 +5,8 @@ include/*
 lib/*
 venv/*
 
+AIO/*
+AIOwiki*/*
 
 *.iml
 config.yaml
