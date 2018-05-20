@@ -1,3 +1,5 @@
+# A tool that formats AIO Episode names into a JSON fragment, which can be pasted into an Alexa Interaction Model
+
 import AIO
 
 episodeValue='{\n"id": null,\n"name": {"value": "EPHERE",\n"synonyms": []\n}\n},'

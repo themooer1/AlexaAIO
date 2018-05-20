@@ -5,9 +5,9 @@ import boto3
 import decimal
 import time
 
-REGION_NAME="us-east-1"
-SESSION_TABLE_NAME="AlexaAIOSession"
-PAUSE_EXPIRE_DAYS=10
+REGION_NAME = "us-east-1"
+SESSION_TABLE_NAME = "AlexaAIOSession"
+PAUSE_EXPIRE_DAYS = 10
 
 """
 This skill can play episodes of Adventures in Odyssey from their online radio broadcast, and free episodes available on their website.
@@ -16,7 +16,9 @@ This skill can play episodes of Adventures in Odyssey from their online radio br
 # --------------- Miscellaneous Helpers ----------------------
 default_session={"Radio":False,"Free":False}
 
+
 def defaultSessionIfNotSet(session_attributes:dict):
+    """Returns a session with default information for this skill if session_attributes is empty."""
     global default_session
     for key, value in default_session.items():
         if key not in session_attributes:
@@ -25,12 +27,16 @@ def defaultSessionIfNotSet(session_attributes:dict):
     #print(session_attributes)
     return session_attributes
 
+
 def url2token(url:str):
+    """SHA256 hash the url of the mp3 file."""
     tokenGen=sha256()
     tokenGen.update(url.encode())
     return tokenGen.hexdigest()
 
+
 def savePlaybackOffset(userId, audioToken, offset:int):
+    """Writes the current playback timestamp to the DynamoDB table with the name stored in const SESSION_TABLE_NAME."""
     global REGION_NAME, SESSION_TABLE_NAME
     conn=boto3.resource('dynamodb',region_name=REGION_NAME)
     table=conn.Table(SESSION_TABLE_NAME)
@@ -38,6 +44,7 @@ def savePlaybackOffset(userId, audioToken, offset:int):
 
 
 def saveLastPlaying(userId,audioToken,url:str):
+    """Writes the currently playing episode to the DynamoDB table with the name stored in const SESSION_TABLE_NAME."""
     global REGION_NAME, SESSION_TABLE_NAME
     conn = boto3.resource('dynamodb', region_name=REGION_NAME)
     table = conn.Table(SESSION_TABLE_NAME)
@@ -45,10 +52,11 @@ def saveLastPlaying(userId,audioToken,url:str):
 
 
 def getLastPlaying(userId):
+    """Takes the amazon userId from a user object.  Returns a dict with keys {audioOffset, audioToken(see url2Token), audioURL, lastUpdated}"""
     global REGION_NAME, SESSION_TABLE_NAME
     conn = boto3.resource('dynamodb', region_name=REGION_NAME)
     table = conn.Table(SESSION_TABLE_NAME)
-    resp=table.get_item(Key={"userId":userId})
+    resp = table.get_item(Key={"userId": userId})
     if 'Item' not in resp:
         return None
     else:
@@ -56,12 +64,13 @@ def getLastPlaying(userId):
 
 
 def convertAllDecToInt(item):
+    """Converts dynamoDB results of type decimal, which are nested in dicts, lists and sets to the python int primitive."""
     if type(item)==dict:
         i = item.copy()
         for key, value in item.items():
             if type(value)==decimal.Decimal:
                 i[key]=int(value)
-    elif type(item)==list:
+    elif type(item)in (list, set):
         i = item.copy()
         for j in range(0,len(i)-1):
             if type(item[j])==decimal.Decimal:
@@ -150,6 +159,7 @@ def start_play_url_response(url:str, title="Playing", output="Now Playing", repr
 
 
 def build_response(session_attributes, speechlet_response):
+    """The outer layer of the JSON response sent to Alexa."""
     return {
         'version': '1.0',
         'sessionAttributes': session_attributes,
@@ -158,16 +168,17 @@ def build_response(session_attributes, speechlet_response):
 
 
 # --------------- Functions that control the skill's behavior ------------------
+# Note: Each of these functions has been named to match the intent which it handles.
 
 def get_welcome_response():
     global default_session
-    """ If we wanted to initialize the session to have some attributes we could
-    add those here
-    """
 
-    latest=AIO.getRadioEpisodes()[0]
+    # Initialize the session.
+    session_attributes = default_session
 
-    session_attributes =default_session
+    # Get the first episode
+    latest = AIO.getRadioEpisodes()[0]
+
     card_title = "Adventures in Odyssey"
     speech_output = "Welcome to Adventues in Odyssey.  " \
                     "The latest episode is episode {0}, {1}.".format(latest['Number'],latest['Name']) +\
@@ -181,6 +192,7 @@ def get_welcome_response():
 
 
 def handle_session_end_request():
+    """Returns a response that says nothing and closes the skill."""
     card_title = "Farewell from Adventures in Odyssey"
     speech_output = ""
     # Setting this to true ends the session and exits the skill.
@@ -312,6 +324,7 @@ def handlePlayByNameIntent(intent, session):
 
     return build_response(session_attributes, build_speechlet_response(card_title, speech_output, reprompt_text, should_end_session))
 
+
 def handleListRadioIntent(intent, session):
     session_attributes=session['attributes']
     session_attributes['Radio']=True
@@ -319,12 +332,14 @@ def handleListRadioIntent(intent, session):
     reprompt_text = "Which episode do you want to play?  You can ask for a description, say the name of the episode, or say the number. "
     return build_response(session_attributes,build_speechlet_response("Currently Airing",speech_output,reprompt_text,False))
 
+
 def handleListFreeIntent(intent, session):
     session_attributes = session['attributes']
     session_attributes['Free']=True
     speech_output = "I found some free episodes.  Interrupt me when you hear one you want to play, and say the name of the episode.    " + ".  ".join(["Episode {0}.  ".format(ep['Number'])+ep['Name'] for ep in AIO.getFreeEpisodes()])
     reprompt_text = "Which episode do you want to play?  You can ask for a description, say the name of the episode, or say the number. "
     return build_response(session_attributes,build_speechlet_response("Free Episodes", speech_output, reprompt_text, False))
+
 
 def handleDescribeEpisodeByNameIntent(intent, session):
     session_attributes = session['attributes'] if 'attributes' in session else {}
@@ -360,6 +375,7 @@ def handleDescribeEpisodeByNameIntent(intent, session):
         reprompt_text = None
     return build_response(session_attributes, build_speechlet_response("Describe Episode: Name Not Heard", speech_output, reprompt_text, False))
 
+
 def handleDescribeEpisodeByNumberIntent(intent, session):
     session_attributes = session['attributes'] if 'attributes' in session else {}
     session_attributes = defaultSessionIfNotSet(session_attributes)
@@ -393,6 +409,7 @@ def handleDescribeEpisodeByNumberIntent(intent, session):
                         "Can you say that again?"
         reprompt_text = None
     return build_response(session_attributes, build_speechlet_response("Describe Episode: Number Not Heard", speech_output, reprompt_text, True))
+
 
 def handleHelpIntent(intent, session):
     session_attributes = session['attributes'] if 'attributes' in session else {}
@@ -429,7 +446,7 @@ def on_launch(launch_request, session):
 
 
 def on_intent(intent_request, session):
-    """ Called when the user specifies an intent for this skill """
+    """ Called when the user specifies an intent for this skill.  Chooses an intent handler to call.  Link new intents here."""
     if 'attributes' not in session:
         session['attributes']={}
     session['attributes'] = defaultSessionIfNotSet(session['attributes'])

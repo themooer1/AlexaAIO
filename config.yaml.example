@@ -1,3 +1,5 @@
+#The configuration for python-lambda to upload the skill to AWS https://github.com/nficano/python-lambda
+
 region: us-east-1
 
 function_name: AlexaAIO
@@ -17,8 +19,8 @@ aws_access_key_id: INSERT_ID_HERE
 aws_secret_access_key: INSERT_ACCESS_KEY_HERE
 
 # dist_directory: dist
-# timeout: 15
-# memory_size: 512
+timeout: 7
+memory_size: 128
 #
 
 # Experimental Environment variables
