@@ -12,5 +12,4 @@ config.yaml
 event.json
 __pycache__
 __pycache__/*
-*.json
 .DS_Store
