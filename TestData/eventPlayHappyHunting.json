@@ -1,0 +1,49 @@
+{
+  "session": {
+    "new": true,
+    "sessionId": "SessionId.a348b4fc-1697-494a-8719-3db813334dde",
+    "application": {
+      "applicationId": "amzn1.ask.skill.84156db1-d05b-4c44-8e27-c02e34b6157f"
+    },
+    "attributes": {},
+    "user": {
+      "userId": "amzn1.ask.account.AGHPBYF6XQSSF2EHDDHHVSREC65FA2SZUNJKCVMKZUVPYJ5DRMJWM77BFYZ433JJYLX6ZM76WPYA5H7X7A32EM6JVUBL72O4RKA73VKOQQSUJRKPPTSM6YNH4QM7EKVKBXOANLPXETY52K3NQR2QBVGTOHIIEAAANGIP5TDEJELL3UEZQ7D33S2W57B7ZEDMITUGEZY6VIPOYJY"
+    }
+  },
+  "request": {
+    "type": "IntentRequest",
+    "requestId": "EdwRequestId.b3ebe5e7-de57-455b-90d5-f9b290cc8f17",
+    "intent": {
+      "name": "PlayByNameIntent",
+      "slots": {
+        "playSyn": {
+          "name": "playSyn",
+          "value": "play"
+        },
+        "EpisodeName": {
+          "name": "EpisodeName",
+          "value": "happy hunting"
+        }
+      }
+    },
+    "locale": "en-US",
+    "timestamp": "2018-01-10T18:29:56Z"
+  },
+  "context": {
+    "AudioPlayer": {
+      "playerActivity": "IDLE"
+    },
+    "System": {
+      "application": {
+        "applicationId": "amzn1.ask.skill.84156db1-d05b-4c44-8e27-c02e34b6157f"
+      },
+      "user": {
+        "userId": "amzn1.ask.account.AGHPBYF6XQSSF2EHDDHHVSREC65FA2SZUNJKCVMKZUVPYJ5DRMJWM77BFYZ433JJYLX6ZM76WPYA5H7X7A32EM6JVUBL72O4RKA73VKOQQSUJRKPPTSM6YNH4QM7EKVKBXOANLPXETY52K3NQR2QBVGTOHIIEAAANGIP5TDEJELL3UEZQ7D33S2W57B7ZEDMITUGEZY6VIPOYJY"
+      },
+      "device": {
+        "supportedInterfaces": {}
+      }
+    }
+  },
+  "version": "1.0"
+}
