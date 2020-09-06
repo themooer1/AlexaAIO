@@ -1,5 +1,5 @@
 from hashlib import sha256
-import AIO
+from AIO import AIO
 import random
 import boto3
 import decimal
@@ -14,7 +14,7 @@ This skill can play episodes of Adventures in Odyssey from their online radio br
 """
 
 # --------------- Miscellaneous Helpers ----------------------
-default_session={"Radio":False,"Free":False}
+default_session = {"Radio": False, "Free": False}
 
 
 def defaultSessionIfNotSet(session_attributes:dict):
@@ -70,7 +70,7 @@ def convertAllDecToInt(item):
         for key, value in item.items():
             if type(value)==decimal.Decimal:
                 i[key]=int(value)
-    elif type(item)in (list, set):
+    elif type(item) in (list, set):
         i = item.copy()
         for j in range(0,len(i)-1):
             if type(item[j])==decimal.Decimal:
