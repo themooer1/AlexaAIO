@@ -32,11 +32,12 @@
                         }
                     ],
                     "samples": [
+                        "tell me what happens in {EpisodeName}",
                         "describe {EpisodeName}",
                         "summarize {EpisodeName}",
                         "what is {EpisodeName} about",
                         "tell me about {EpisodeName}",
-                        "what happens in {EpisodeName}",
+                        "what happens in {EpisodeName} ",
                         "give me the summary of {EpisodeName}",
                         "give me the description of {EpisodeName}"
                     ]
@@ -104,6 +105,8 @@
                         }
                     ],
                     "samples": [
+                        "{playSyn} something",
+                        "{playSyn} a random {odyssey}",
                         "{playSyn} anything",
                         "{playSyn} whatever",
                         "{playSyn} an {odyssey}",
@@ -169,6 +172,10 @@
                         "{playSyn} what is {onRadioSyn}",
                         "{playSyn} the latest {onRadioSyn}"
                     ]
+                },
+                {
+                    "name": "AMAZON.NavigateHomeIntent",
+                    "samples": []
                 }
             ],
             "types": [
@@ -177,47 +184,42 @@
                     "values": [
                         {
                             "name": {
-                                "value": "Forgiving More or Less"
+                                "value": "The Secret of the Writer's Ruse"
                             }
                         },
                         {
                             "name": {
-                                "value": "Buddy Guard"
+                                "value": "Best Laid Plans"
                             }
                         },
                         {
                             "name": {
-                                "value": "B-TV: Temptation"
+                                "value": "Missionary: Impossible"
                             }
                         },
                         {
                             "name": {
-                                "value": "The Other Side of the Glass Part three"
+                                "value": "Life Trials of the Rich and Famous"
                             }
                         },
                         {
                             "name": {
-                                "value": "The Other Side of the Glass Part two"
+                                "value": "The Big Deal, Part two"
                             }
                         },
                         {
                             "name": {
-                                "value": "The Other Side of the Glass Part one"
+                                "value": "The Big Deal, Part one"
                             }
                         },
                         {
                             "name": {
-                                "value": "Out of the Picture"
+                                "value": "The Key Suspect"
                             }
                         },
                         {
                             "name": {
-                                "value": "Only By His Grace"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "Best of Enemies"
+                                "value": "Mandy's Debut"
                             }
                         },
                         {
@@ -562,7 +564,7 @@
                         },
                         {
                             "name": {
-                                "value": "The Imagination Station, Part 2"
+                                "value": "The Imagination Station"
                             }
                         },
                         {
@@ -762,7 +764,8 @@
                         }
                     ]
                 }
-            ]
+            ],
+            "delegationStrategy": "SKILL_RESPONSE"
         },
         "prompts": [
             {
